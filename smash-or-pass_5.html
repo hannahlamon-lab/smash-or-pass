@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smash or Pass?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --void:#170B22;
+    --panel:#241134;
+    --panel-2:#2E1640;
+    --cream:#FFF7EE;
+    --cream-dim:#F3E7D8;
+    --ink:#241030;
+    --muted:#8C7B9C;
+    --flame-1:#FF5F5F;
+    --flame-2:#FD2B82;
+    --mint:#39D9BC;
+    --mint-dark:#1E9E87;
+    --red:#FF4D5E;
+    --red-dark:#C22E44;
+    --gold:#FFC94D;
+    --gold-dark:#D89A1C;
+    --radius-lg:24px;
+    --radius-md:16px;
+    --radius-sm:10px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--void);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    overflow:hidden;
+  }
+  #app{height:100vh; width:100vw; position:relative;}
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    height:100vh; width:100vw;
+  }
+  .screen.hidden{display:none;}
+  button{font-family:inherit; cursor:pointer; border:none;}
+  button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:3px solid var(--gold); outline-offset:2px;
+  }
+  ::placeholder{color:var(--muted); opacity:.8;}
+  h1,h2,h3{font-family:'Baloo 2',sans-serif; margin:0;}
+
+  /* ---------- SETUP SCREEN ---------- */
+  #screen-setup{overflow-y:auto; background:
+    radial-gradient(circle at 15% 0%, rgba(253,43,130,.18), transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(255,95,95,.14), transparent 40%),
+    var(--void);
+  }
+  .setup-header{
+    padding:28px 40px 16px; display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  .setup-header h1{
+    font-size:clamp(26px,3vw,38px); font-weight:800;
+    background:linear-gradient(90deg,var(--flame-1),var(--flame-2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .setup-header .sub{color:var(--muted); font-size:14px; margin-top:4px;}
+  .save-pill{
+    font-size:13px; color:var(--mint); background:rgba(57,217,188,.12);
+    padding:6px 14px; border-radius:999px; white-space:nowrap;
+  }
+  .setup-body{
+    display:grid; grid-template-columns:1fr 1.35fr; gap:24px;
+    padding:0 40px 120px; max-width:1400px; margin:0 auto; width:100%;
+  }
+  @media (max-width:900px){ .setup-body{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--panel); border:1px solid rgba(255,255,255,.06);
+    border-radius:var(--radius-lg); padding:22px;
+  }
+  .panel h2{font-size:19px; margin-bottom:4px;}
+  .panel .hint{color:var(--muted); font-size:13px; margin-bottom:16px; line-height:1.5;}
+
+  .list-field{margin-bottom:18px;}
+  .list-field label{
+    display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-bottom:6px;
+  }
+  .list-field .count{
+    margin-left:auto; font-size:12px; color:var(--muted); font-weight:500;
+  }
+  .list-field textarea{
+    width:100%; min-height:78px; resize:vertical;
+    background:var(--void); border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-sm); color:var(--cream); padding:10px 12px;
+    font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.5;
+  }
+
+  .profile-row{
+    display:grid; grid-template-columns:60px 60px 1fr 70px 1fr; gap:10px; align-items:center;
+    padding:10px; border-radius:var(--radius-md); margin-bottom:8px;
+    background:var(--panel-2);
+  }
+  .thumb-wrap{display:flex; flex-direction:column; align-items:center; gap:3px;}
+  .thumb-caption{font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; text-align:center;}
+  .thumb{
+    width:52px; height:52px; border-radius:50%; overflow:hidden; position:relative;
+    background:linear-gradient(135deg,var(--flame-1),var(--flame-2));
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    border:2px solid rgba(255,255,255,.15);
+  }
+  .thumb img{width:100%; height:100%; object-fit:cover;}
+  .thumb .icon{font-size:22px;}
+  .thumb input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .profile-row input{
+    background:var(--void); border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-sm); color:var(--cream); padding:9px 10px; font-size:13.5px; width:100%;
+    font-family:'Inter',sans-serif;
+  }
+  .profile-row input.age{text-align:center;}
+  .profile-row .field-label{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:3px; display:block;}
+
+  .setup-footer{
+    position:fixed; bottom:0; left:0; right:0;
+    background:linear-gradient(0deg, var(--void) 60%, transparent);
+    padding:26px 40px 22px; display:flex; justify-content:flex-end; gap:14px; align-items:center;
+  }
+  .btn-primary{
+    background:linear-gradient(90deg,var(--flame-1),var(--flame-2));
+    color:white; font-weight:800; font-family:'Baloo 2',sans-serif;
+    font-size:17px; padding:14px 30px; border-radius:999px;
+    box-shadow:0 8px 24px rgba(253,43,130,.35);
+  }
+  .btn-secondary{
+    background:transparent; color:var(--cream); border:1px solid rgba(255,255,255,.2);
+    font-weight:600; padding:13px 22px; border-radius:999px; font-size:14.5px;
+  }
+  .btn-danger-link{
+    background:none; color:var(--muted); font-size:12.5px; text-decoration:underline; padding:6px;
+  }
+
+  /* ---------- PLAY SCREEN ---------- */
+  #screen-play{background:var(--void); background-image:
+    radial-gradient(circle at 50% -10%, rgba(255,95,95,.10), transparent 50%);}
+  .play-header{
+    height:9vh; min-height:60px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 clamp(16px,3vw,40px); border-bottom:1px solid rgba(255,255,255,.07); flex-shrink:0;
+  }
+  .play-header .brand{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(16px,2vw,22px);
+    background:linear-gradient(90deg,var(--flame-1),var(--flame-2)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .play-header .center-info{display:flex; gap:10px; align-items:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:clamp(14px,1.7vw,19px); color:var(--cream-dim);}
+  .play-header .badge{
+    background:var(--panel-2); padding:6px 16px; border-radius:999px; font-size:clamp(13px,1.6vw,17px);
+  }
+  .play-header .bride-badge{color:var(--gold); border:1px solid rgba(255,201,77,.35);}
+  #btnBackSetup{background:none; color:var(--muted); font-size:13px; padding:8px 10px; border-radius:8px;}
+  #btnBackSetup:hover{color:var(--cream);}
+
+  .play-main{
+    flex:1; display:grid; grid-template-columns:42% 58%; gap:clamp(12px,2vw,26px);
+    padding:clamp(12px,2vw,26px) clamp(16px,3vw,40px); min-height:0;
+  }
+
+  .left-col{
+    display:flex; flex-direction:column; gap:clamp(8px,1.2vh,14px); min-height:0; height:100%;
+  }
+  .photo-card{
+    position:relative; flex:1; min-height:0; display:flex; flex-direction:column; align-items:center;
+    background:var(--cream); border-radius:var(--radius-lg);
+    padding:6px 6px 0 6px; box-shadow:0 14px 34px rgba(0,0,0,.4);
+    border:1px solid rgba(0,0,0,.08); overflow:visible;
+  }
+  .photo-image-wrap{
+    flex:1; min-height:0; width:auto; max-width:100%; aspect-ratio:4/5;
+    border-radius:calc(var(--radius-lg) - 4px); overflow:hidden;
+    position:relative; background:#0d0714; align-self:center;
+  }
+  .photo-image-wrap img{width:100%; height:100%; object-fit:cover; display:block; image-rendering:auto;}
+  .photo-image-wrap .no-photo{
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:56px; opacity:.4;
+  }
+  .photo-info-strip{
+    padding:8px 4px 10px; display:flex; align-items:baseline; gap:10px; color:var(--ink); flex-shrink:0;
+    align-self:stretch;
+  }
+  .photo-info-strip .fname{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(22px,3vw,36px);}
+  .photo-info-strip .fage{font-size:clamp(16px,2vw,24px); color:var(--muted); font-weight:600;}
+
+  .vote-stamp{
+    position:absolute; top:48%; left:50%; transform:translate(-50%,-50%) scale(0); opacity:0;
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(24px,4vw,46px);
+    letter-spacing:.03em; padding:8px 22px; border-radius:14px; z-index:6; pointer-events:none;
+    border:5px solid currentColor; white-space:nowrap;
+  }
+  .vote-stamp.show.pass{color:var(--red); background:rgba(255,77,94,.14); animation:stampPass 1.15s ease forwards;}
+  .vote-stamp.show.smash{color:var(--mint-dark); background:rgba(57,217,188,.16); animation:stampSmash 1.15s ease forwards;}
+  @keyframes stampPass{
+    0%{transform:translate(-50%,-50%) scale(3) rotate(-16deg); opacity:0;}
+    12%{opacity:1;}
+    28%{transform:translate(-50%,-50%) scale(1) rotate(-10deg); opacity:1;}
+    75%{opacity:1; transform:translate(-50%,-50%) scale(1) rotate(-10deg);}
+    100%{opacity:0; transform:translate(-50%,-50%) scale(1) rotate(-10deg);}
+  }
+  @keyframes stampSmash{
+    0%{transform:translate(-50%,-50%) scale(3) rotate(14deg); opacity:0;}
+    12%{opacity:1;}
+    28%{transform:translate(-50%,-50%) scale(1.1) rotate(8deg); opacity:1;}
+    40%{transform:translate(-50%,-50%) scale(1) rotate(8deg);}
+    75%{opacity:1; transform:translate(-50%,-50%) scale(1) rotate(8deg);}
+    100%{opacity:0; transform:translate(-50%,-50%) scale(1) rotate(8deg);}
+  }
+  .heart-burst{position:absolute; inset:0; pointer-events:none; z-index:6; overflow:visible;}
+  .heart-burst span{position:absolute; bottom:14%; font-size:26px; opacity:0; animation:floatUp 1.15s ease-out forwards;}
+  @keyframes floatUp{
+    0%{opacity:0; transform:translateY(0) scale(.6);}
+    15%{opacity:1;}
+    100%{opacity:0; transform:translateY(-170px) translateX(var(--dx,0px)) scale(1.15);}
+  }
+  .shake-hard{animation:shakeHard .5s ease;}
+  @keyframes shakeHard{
+    0%,100%{transform:translateX(0) rotate(0);}
+    15%{transform:translateX(-9px) rotate(-2deg);}
+    35%{transform:translateX(9px) rotate(2deg);}
+    55%{transform:translateX(-6px) rotate(-1deg);}
+    75%{transform:translateX(6px) rotate(1deg);}
+  }
+
+  .vote-row{
+    flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:8px; padding:2px 0;
+  }
+  .vote-hint{
+    font-size:clamp(11px,1.3vw,13px); color:var(--muted); font-weight:600; letter-spacing:.02em;
+    text-align:center; transition:color .2s ease;
+  }
+  .vote-hint.ready{color:var(--gold); font-weight:700;}
+  .vote-buttons-row{display:flex; justify-content:center; align-items:center; gap:clamp(22px,4.5vw,58px);}
+  .vote-btn{
+    width:clamp(58px,7.5vw,84px); height:clamp(58px,7.5vw,84px); border-radius:50%;
+    font-size:clamp(22px,2.8vw,32px); display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease, opacity .2s ease, filter .2s ease; box-shadow:0 6px 20px rgba(0,0,0,.35);
+  }
+  .vote-btn:disabled{opacity:.15; filter:grayscale(85%) saturate(40%); cursor:not-allowed; box-shadow:none;}
+  .vote-btn:not(:disabled){opacity:1; filter:none;}
+  .vote-btn:not(:disabled):hover{transform:scale(1.08);}
+  .vote-btn.pass{background:linear-gradient(135deg,var(--red),var(--red-dark)); color:white;}
+  .vote-btn.smash{background:linear-gradient(135deg,var(--mint),var(--mint-dark)); color:white;}
+  .vote-btn.voted{outline:4px solid var(--gold);}
+  .vote-btn.ready-pulse{animation:readyPulse .55s ease 2;}
+  @keyframes readyPulse{
+    0%{transform:scale(1); box-shadow:0 6px 20px rgba(0,0,0,.35), 0 0 0 0 rgba(255,201,77,.6);}
+    50%{transform:scale(1.14); box-shadow:0 6px 20px rgba(0,0,0,.35), 0 0 0 14px rgba(255,201,77,0);}
+    100%{transform:scale(1); box-shadow:0 6px 20px rgba(0,0,0,.35), 0 0 0 0 rgba(255,201,77,0);}
+  }
+
+  .reveal-slot{flex-shrink:0; display:flex; justify-content:center; min-height:clamp(48px,7vh,64px); align-items:center;}
+  .reveal-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(14px,1.8vw,18px);
+    background:linear-gradient(90deg,var(--flame-1),var(--flame-2)); color:white;
+    padding:13px 26px; border-radius:999px; box-shadow:0 8px 26px rgba(253,43,130,.4);
+  }
+  .reveal-btn.hidden{visibility:hidden;}
+
+  .details-pane{
+    display:flex; flex-direction:column; gap:clamp(8px,1.4vh,14px); min-height:0;
+  }
+  .cat-row{
+    background:var(--panel); border:1px solid rgba(255,255,255,.07); border-radius:var(--radius-md);
+    padding:clamp(14px,2.4vh,26px) clamp(20px,2.6vw,32px);
+    display:flex; align-items:center; gap:18px;
+    flex:1; min-height:0; cursor:pointer; transition:transform .15s ease, border-color .15s ease;
+  }
+  .cat-row:not(.filled):hover{border-color:var(--flame-2); transform:translateY(-1px);}
+  .cat-row.filled{cursor:default;}
+  .cat-row .icon{font-size:clamp(24px,2.8vw,38px); flex-shrink:0;}
+  .cat-row .body{flex:1; min-width:0;}
+  .cat-row .cat-label{
+    display:block; font-size:clamp(13px,1.3vw,18px); text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); font-weight:700; margin-bottom:6px;
+  }
+  .cat-row .cat-value{
+    font-size:clamp(19px,2.4vw,32px); color:var(--cream); line-height:1.3; font-weight:500;
+  }
+  .cat-row .cat-value.placeholder{color:var(--muted); font-weight:600; font-style:italic;}
+  .cat-row.about-me .cat-value{
+    font-size:clamp(16px,1.9vw,26px); line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .tag-wrap{display:flex; flex-wrap:wrap; gap:10px;}
+  .tag-pill{
+    background:var(--panel-2); border:1px solid rgba(255,255,255,.12); border-radius:999px;
+    padding:8px 20px; font-size:clamp(16px,1.9vw,26px); font-weight:600;
+  }
+
+  /* ---------- REVEAL OVERLAY ---------- */
+  #revealOverlay{
+    position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 40%, rgba(253,43,130,.35), rgba(23,11,34,.97) 65%);
+  }
+  #revealOverlay.hidden{display:none;}
+  #confettiCanvas{position:absolute; inset:0; width:100%; height:100%;}
+  .overlay-content{position:relative; text-align:center; z-index:2; max-width:800px; max-height:96vh; overflow-y:auto; padding:20px;}
+  .overlay-tag{font-size:clamp(15px,2vw,20px); color:var(--cream-dim); margin-bottom:10px; letter-spacing:.03em;}
+  .reveal-photo-wrap{
+    height:clamp(280px,50vh,560px); width:auto; display:flex; align-items:center; justify-content:center;
+    margin:0 auto 22px; background:var(--cream); padding:10px; border-radius:var(--radius-lg);
+    box-shadow:0 14px 34px rgba(0,0,0,.45); border:1px solid rgba(0,0,0,.08);
+    animation:popIn .5s cubic-bezier(.2,1.5,.4,1);
+  }
+  .reveal-photo-inner{
+    height:100%; width:auto; aspect-ratio:4/5; border-radius:calc(var(--radius-lg) - 4px);
+    overflow:hidden; background:#0d0714; display:flex; align-items:center; justify-content:center;
+  }
+  .reveal-photo-inner img{width:100%; height:100%; object-fit:cover; display:block;}
+  .reveal-photo-inner .no-photo-fallback{font-size:56px; opacity:.5;}
+  .overlay-name{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(42px,8vw,88px);
+    color:var(--gold); text-shadow:0 4px 30px rgba(255,201,77,.4); margin-bottom:26px;
+    animation:popIn .5s cubic-bezier(.2,1.5,.4,1);
+  }
+  @keyframes popIn{ 0%{transform:scale(.4); opacity:0;} 100%{transform:scale(1); opacity:1;} }
+  .guess-prompt{font-size:clamp(15px,2vw,19px); color:var(--cream-dim); margin-bottom:16px;}
+  .bride-guess{display:flex; flex-direction:column; align-items:center; gap:14px;}
+  .bride-guess.hidden{display:none;}
+  .guess-buttons{display:flex; gap:16px; flex-wrap:wrap; justify-content:center;}
+  .guess-buttons button{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:clamp(14px,1.8vw,18px);
+    padding:14px 24px; border-radius:999px; color:var(--ink);
+  }
+  #btnGuessRight{background:var(--mint);}
+  #btnGuessWrong{background:var(--red); color:white;}
+  .reward-box{
+    margin:4px auto 0; padding:18px 28px; border-radius:18px; max-width:560px;
+    animation:popIn .4s cubic-bezier(.2,1.5,.4,1);
+  }
+  .reward-box.hidden{display:none;}
+  .reward-box.reward{background:rgba(255,201,77,.14); border:2px solid var(--gold);}
+  .reward-box.consequence{background:rgba(255,77,94,.14); border:2px solid var(--red);}
+  .reward-label{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(18px,2.2vw,24px); margin-bottom:8px;}
+  .reward-box.reward .reward-label{color:var(--gold);}
+  .reward-box.consequence .reward-label{color:var(--red);}
+  .reward-text{font-size:clamp(15px,1.9vw,20px); color:var(--cream); line-height:1.4; font-weight:600;}
+  #btnNextProfile{
+    margin-top:22px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(15px,2vw,20px);
+    background:var(--cream); color:var(--ink); padding:15px 32px; border-radius:999px;
+  }
+  #btnNextProfile.hidden{display:none;}
+
+  /* ---------- START SCREEN ---------- */
+  #screen-start{
+    align-items:center; justify-content:center; text-align:center; gap:30px;
+    background:radial-gradient(circle at 50% 25%, rgba(253,43,130,.2), var(--void) 60%);
+  }
+  .start-title{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(38px,7vw,92px);
+    background:linear-gradient(90deg,var(--flame-1),var(--flame-2));
+    -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:.01em;
+  }
+  .start-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(18px,2.4vw,26px);
+    background:linear-gradient(90deg,var(--flame-1),var(--flame-2)); color:white;
+    padding:20px 46px; border-radius:999px; box-shadow:0 10px 30px rgba(253,43,130,.4);
+  }
+
+  /* ---------- RECAP SCREEN ---------- */
+  #screen-recap{
+    align-items:center; justify-content:center; text-align:center; gap:22px;
+    background:radial-gradient(circle at 50% 20%, rgba(255,95,95,.15), var(--void) 60%);
+  }
+  #screen-recap h1{font-size:clamp(32px,5vw,54px); background:linear-gradient(90deg,var(--flame-1),var(--flame-2)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .final-score{font-family:'Baloo 2',sans-serif; font-size:clamp(20px,3vw,28px); color:var(--gold);}
+  .recap-actions{display:flex; gap:16px; margin-top:10px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .cat-row, .vote-btn, .overlay-name, .shake-hard, .vote-btn.ready-pulse{animation:none !important; transition:none !important;}
+    .vote-stamp.show{animation:none !important; opacity:1 !important; transform:translate(-50%,-50%) scale(1) rotate(0) !important;}
+    .heart-burst span{animation:none !important; display:none !important;}
+  }
+
+  .storage-error{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:200;
+    background:var(--red); color:white; padding:13px 24px; border-radius:12px;
+    font-weight:700; font-size:14px; box-shadow:0 10px 28px rgba(0,0,0,.45);
+    max-width:90vw; text-align:center;
+  }
+  .storage-error.hidden{display:none;}
+</style>
+</head>
+<body>
+<div id="storageErrorBanner" class="storage-error hidden"></div>
+<div id="app">
+
+  <!-- SETUP SCREEN -->
+  <div id="screen-setup" class="screen">
+    <div class="setup-header">
+      <div>
+        <h1>🔥 Smash or Pass — Setup</h1>
+        <div class="sub">Fill this in before the party. It saves automatically to this device.</div>
+      </div>
+      <div class="save-pill" id="savePill">✓ Saved</div>
+    </div>
+
+    <div class="setup-body">
+      <div class="panel">
+        <h2>Category option lists</h2>
+        <div class="hint">One option per line. The game pulls from these randomly, trying not to repeat until a list runs out — so a longer list means fewer repeats. Keep "About me" short (roughly 2 sentences) so it fits on screen without scrolling.</div>
+        <div id="listFields"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Profiles (10)</h2>
+        <div class="hint">Upload the makeover photo, and give each girl a fake dating-app name + age. "Real name" is hidden during play and only revealed after voting.</div>
+        <div id="profileRows"></div>
+      </div>
+    </div>
+
+    <div class="setup-footer">
+      <button class="btn-danger-link" id="btnResetAll">Clear all saved data</button>
+      <button class="btn-secondary" id="btnGoPlay">▶ Resume game</button>
+      <button class="btn-primary" id="btnStartGame">🎬 Start Game</button>
+    </div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="screen hidden">
+    <div class="start-title">🔥 SMASH OR PASS? 🔥</div>
+    <button class="start-btn" id="btnLetsPlay">Let's Play →</button>
+  </div>
+
+  <!-- PLAY SCREEN -->
+  <div id="screen-play" class="screen hidden">
+    <div class="play-header">
+      <button id="btnBackSetup">⚙ Setup</button>
+      <div class="brand">SMASH OR PASS?</div>
+      <div class="center-info">
+        <span class="badge" id="progressBadge">Profile 1/10</span>
+        <span class="badge bride-badge" id="brideBadge">👑 Bride: 0/0</span>
+      </div>
+    </div>
+    <div class="play-main">
+      <div class="left-col">
+        <div class="photo-card">
+          <div class="photo-image-wrap" id="photoImageWrap">
+            <div class="no-photo">🕶️</div>
+          </div>
+          <div class="photo-info-strip">
+            <span class="fname" id="fakeName">—</span>
+            <span class="fage" id="fakeAge"></span>
+          </div>
+          <div class="vote-stamp" id="voteStamp"></div>
+          <div class="heart-burst" id="heartBurst"></div>
+        </div>
+        <div class="vote-row">
+          <div class="vote-hint" id="voteHint">Tap through all 5 categories first</div>
+          <div class="vote-buttons-row">
+            <button class="vote-btn pass" id="btnPass" disabled title="Pass">✕</button>
+            <button class="vote-btn smash" id="btnSmash" disabled title="Smash">♥</button>
+          </div>
+        </div>
+        <div class="reveal-slot">
+          <button class="reveal-btn hidden" id="btnReveal">Reveal her identity 🔥</button>
+        </div>
+      </div>
+      <div class="details-pane" id="detailsPane"></div>
+    </div>
+  </div>
+
+  <!-- RECAP SCREEN -->
+  <div id="screen-recap" class="screen hidden">
+    <h1>That's everyone! 🎉</h1>
+    <div class="final-score" id="finalScore">👑 Bride's final score: 0/0</div>
+    <div class="recap-actions">
+      <button class="btn-primary" id="btnPlayAgain">🔁 Play again</button>
+      <button class="btn-secondary" id="btnEditSetup2">⚙ Edit setup</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- REVEAL OVERLAY -->
+<div id="revealOverlay" class="hidden">
+  <canvas id="confettiCanvas"></canvas>
+  <div class="overlay-content">
+    <div class="overlay-tag">She was actually...</div>
+    <div class="reveal-photo-wrap" id="revealPhotoWrap"></div>
+    <div class="overlay-name" id="overlayName">???</div>
+    <div class="bride-guess" id="brideGuessBox">
+      <div class="guess-prompt">Did the bride guess correctly?</div>
+      <div class="guess-buttons">
+        <button id="btnGuessRight">She nailed it 🎉</button>
+        <button id="btnGuessWrong">Nope! 😅</button>
+      </div>
+    </div>
+    <div class="reward-box hidden" id="rewardBox">
+      <div class="reward-label" id="rewardLabel"></div>
+      <div class="reward-text" id="rewardText"></div>
+    </div>
+    <button id="btnNextProfile" class="hidden">Next profile →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Uses Claude's built-in artifact storage when available (previewing inside Claude).
+  // Falls back to the browser's own localStorage when this file is hosted standalone
+  // (e.g. on GitHub Pages), so the same file works in both places.
+  const storage = (window.storage && typeof window.storage.get === 'function') ? window.storage : {
+    async get(key){
+      const v = localStorage.getItem(key);
+      if(v === null) throw new Error('not found');
+      return {key, value:v, shared:false};
+    },
+    async set(key, value){
+      localStorage.setItem(key, value);
+      return {key, value, shared:false};
+    },
+    async delete(key){
+      localStorage.removeItem(key);
+      return {key, deleted:true, shared:false};
+    },
+    async list(prefix){
+      const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
+      return {keys, shared:false};
+    }
+  };
+
+  const CATS = [
+    {key:'livesIn',    label:'Lives in',     icon:'🏠', count:1, cls:''},
+    {key:'lookingFor', label:'Looking for',  icon:'💘', count:1, cls:''},
+    {key:'aboutMe',    label:'About me',     icon:'📝', count:1, cls:'about-me'},
+    {key:'interests',  label:'Interests',    icon:'✨', count:3, cls:''},
+    {key:'career',     label:'Career',       icon:'💼', count:1, cls:''},
+  ];
+  const NUM_PROFILES = 10;
+
+  function blankProfile(){ return {fakeName:'', age:'', realName:''}; }
+  function defaultSetup(){
+    const lists = {};
+    CATS.forEach(c => lists[c.key] = []);
+    lists.rewards = [];
+    lists.consequences = [];
+    return { profiles: Array.from({length:NUM_PROFILES}, blankProfile), lists };
+  }
+
+  let setup = defaultSetup();
+  let photos = {}; // idx -> dataURL, the AI makeover photo
+  let beforePhotos = {}; // idx -> dataURL, the original photo she sent
+  let session = null; // built when game starts
+
+  // ---------- STORAGE ----------
+  async function loadSetup(){
+    try{
+      const r = await storage.get('smashorpass-setup');
+      if(r && r.value){ setup = JSON.parse(r.value); }
+    }catch(e){ /* nothing saved yet */ }
+  }
+  async function saveSetup(){
+    try{
+      await storage.set('smashorpass-setup', JSON.stringify(setup));
+      flashSaved();
+    }catch(e){
+      console.error('save setup failed', e);
+      showStorageError('⚠️ Could not save your profile info — your browser storage may be full.');
+    }
+  }
+  async function loadPhotos(){
+    try{
+      const r = await storage.get('smashorpass-photos');
+      if(r && r.value){ photos = JSON.parse(r.value); }
+    }catch(e){ photos = {}; }
+  }
+  async function savePhotos(){
+    try{ await storage.set('smashorpass-photos', JSON.stringify(photos)); }
+    catch(e){
+      console.error('save photos failed', e);
+      showStorageError('⚠️ Could not save that photo — your browser storage may be full. Try removing an old photo or using a smaller one.');
+    }
+  }
+  async function loadBeforePhotos(){
+    try{
+      const r = await storage.get('smashorpass-before-photos');
+      if(r && r.value){ beforePhotos = JSON.parse(r.value); }
+    }catch(e){ beforePhotos = {}; }
+  }
+  async function saveBeforePhotos(){
+    try{ await storage.set('smashorpass-before-photos', JSON.stringify(beforePhotos)); }
+    catch(e){
+      console.error('save before photos failed', e);
+      showStorageError('⚠️ Could not save that photo — your browser storage may be full. Try removing an old photo or using a smaller one.');
+    }
+  }
+  async function loadSession(){
+    try{
+      const r = await storage.get('smashorpass-session');
+      if(r && r.value){ session = JSON.parse(r.value); }
+    }catch(e){ session = null; }
+  }
+  async function saveSession(){
+    try{ await storage.set('smashorpass-session', JSON.stringify(session)); }
+    catch(e){
+      console.error('save session failed', e);
+      showStorageError('⚠️ Could not save game progress — your browser storage may be full.');
+    }
+  }
+  let saveTimer=null;
+  function debouncedSaveSetup(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveSetup, 500);
+  }
+  function flashSaved(){
+    const pill = document.getElementById('savePill');
+    pill.textContent = '✓ Saved';
+  }
+  let errorTimer=null;
+  function showStorageError(msg){
+    const el = document.getElementById('storageErrorBanner');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    clearTimeout(errorTimer);
+    errorTimer = setTimeout(() => el.classList.add('hidden'), 7000);
+  }
+
+  // ---------- UTIL ----------
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+  function esc(s){
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+  }
+
+  function compressImage(file){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        const img = new Image();
+        img.onload = ()=>{
+          const maxDim = 700;
+          let {width,height} = img;
+          if(height > width){
+            if(height > maxDim){ width *= maxDim/height; height = maxDim; }
+          } else {
+            if(width > maxDim){ height *= maxDim/width; width = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img,0,0,width,height);
+          resolve(canvas.toDataURL('image/jpeg', 0.78));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ---------- SETUP SCREEN RENDER ----------
+  function renderSetupScreen(){
+    const listFields = document.getElementById('listFields');
+    listFields.innerHTML = CATS.map(c => `
+      <div class="list-field">
+        <label>${c.icon} ${esc(c.label)} <span class="count" data-count="${c.key}">${setup.lists[c.key].length} options</span></label>
+        <textarea data-list="${c.key}" placeholder="One option per line...">${esc(setup.lists[c.key].join('\n'))}</textarea>
+      </div>
+    `).join('') + `
+      <div style="margin:24px 0 14px; padding-top:16px; border-top:1px solid rgba(255,255,255,.08);">
+        <h2 style="font-size:16px; margin-bottom:4px;">🎉 Bride's rewards &amp; consequences</h2>
+        <div class="hint" style="margin-bottom:14px;">After each guess, one option is picked at random from whichever list applies.</div>
+      </div>
+      <div class="list-field">
+        <label>🎁 Rewards (guessed right) <span class="count" data-count="rewards">${setup.lists.rewards.length} options</span></label>
+        <textarea data-list="rewards" placeholder="One reward per line...">${esc(setup.lists.rewards.join('\n'))}</textarea>
+      </div>
+      <div class="list-field">
+        <label>😬 Consequences (guessed wrong) <span class="count" data-count="consequences">${setup.lists.consequences.length} options</span></label>
+        <textarea data-list="consequences" placeholder="One consequence per line...">${esc(setup.lists.consequences.join('\n'))}</textarea>
+      </div>
+    `;
+
+    listFields.querySelectorAll('textarea').forEach(ta => {
+      ta.addEventListener('input', () => {
+        const key = ta.dataset.list;
+        setup.lists[key] = ta.value.split('\n').map(s=>s.trim()).filter(Boolean);
+        listFields.querySelector(`[data-count="${key}"]`).textContent = setup.lists[key].length + ' options';
+        debouncedSaveSetup();
+      });
+    });
+
+    const profileRows = document.getElementById('profileRows');
+    profileRows.innerHTML = setup.profiles.map((p,i) => `
+      <div class="profile-row" data-idx="${i}">
+        <div class="thumb-wrap">
+          <div class="thumb">
+            ${photos[i] ? `<img src="${photos[i]}" alt="">` : `<span class="icon">📷</span>`}
+            <input type="file" accept="image/*" data-photo="${i}" title="Upload the AI makeover photo for profile ${i+1}">
+          </div>
+          <span class="thumb-caption">After</span>
+        </div>
+        <div class="thumb-wrap">
+          <div class="thumb">
+            ${beforePhotos[i] ? `<img src="${beforePhotos[i]}" alt="">` : `<span class="icon">🤷</span>`}
+            <input type="file" accept="image/*" data-beforephoto="${i}" title="Upload her original before photo for profile ${i+1}">
+          </div>
+          <span class="thumb-caption">Before</span>
+        </div>
+        <div>
+          <span class="field-label">Fake dating name</span>
+          <input type="text" data-fake="${i}" value="${esc(p.fakeName)}" placeholder="e.g. Leon">
+        </div>
+        <div>
+          <span class="field-label">Age</span>
+          <input type="number" min="18" max="99" class="age" data-age="${i}" value="${esc(p.age)}" placeholder="27">
+        </div>
+        <div>
+          <span class="field-label">Real name (hidden until reveal)</span>
+          <input type="text" data-real="${i}" value="${esc(p.realName)}" placeholder="e.g. Jess">
+        </div>
+      </div>
+    `).join('');
+
+    profileRows.querySelectorAll('input[type=text], input[type=number]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const idx = parseInt(inp.dataset.fake ?? inp.dataset.age ?? inp.dataset.real, 10);
+        if(inp.dataset.fake !== undefined) setup.profiles[idx].fakeName = inp.value;
+        if(inp.dataset.age !== undefined) setup.profiles[idx].age = inp.value;
+        if(inp.dataset.real !== undefined) setup.profiles[idx].realName = inp.value;
+        debouncedSaveSetup();
+      });
+    });
+    profileRows.querySelectorAll('input[data-photo]').forEach(inp => {
+      inp.addEventListener('change', async (e) => {
+        const idx = parseInt(inp.dataset.photo, 10);
+        const file = e.target.files[0];
+        if(!file) return;
+        try{
+          const dataUrl = await compressImage(file);
+          photos[idx] = dataUrl;
+          renderSetupScreen();
+          await savePhotos();
+        }catch(err){ console.error('photo compress failed', err); }
+      });
+    });
+    profileRows.querySelectorAll('input[data-beforephoto]').forEach(inp => {
+      inp.addEventListener('change', async (e) => {
+        const idx = parseInt(inp.dataset.beforephoto, 10);
+        const file = e.target.files[0];
+        if(!file) return;
+        try{
+          const dataUrl = await compressImage(file);
+          beforePhotos[idx] = dataUrl;
+          renderSetupScreen();
+          await saveBeforePhotos();
+        }catch(err){ console.error('before photo compress failed', err); }
+      });
+    });
+  }
+
+  // ---------- SESSION / GAME LOGIC ----------
+  function buildBags(){
+    const bags = {};
+    CATS.forEach(c => bags[c.key] = shuffle(setup.lists[c.key]));
+    bags.rewards = shuffle(setup.lists.rewards);
+    bags.consequences = shuffle(setup.lists.consequences);
+    return bags;
+  }
+  function drawFromBag(catKey, count, bags){
+    const pool = setup.lists[catKey] || [];
+    if(pool.length === 0) return Array(count).fill('(add options in setup!)');
+    let bag = bags[catKey];
+    const chosen = [];
+    while(chosen.length < count){
+      if(bag.length === 0){
+        const remaining = shuffle(pool.filter(v => !chosen.includes(v)));
+        bag = remaining.length ? remaining : shuffle(pool.slice());
+      }
+      chosen.push(bag.pop());
+    }
+    bags[catKey] = bag;
+    return chosen;
+  }
+
+  function newSession(){
+    session = {
+      order: shuffle(setup.profiles.map((_,i)=>i)),
+      currentIndex: 0,
+      bags: buildBags(),
+      filled: {},
+      votes: {},
+      revealed: {},
+      brideCorrect: 0,
+      brideTotal: 0,
+    };
+    saveSession();
+  }
+
+  function currentProfileIdx(){ return session.order[session.currentIndex]; }
+  function currentProfile(){ return setup.profiles[currentProfileIdx()]; }
+
+  function renderPlayScreen(){
+    const idx = currentProfileIdx();
+    const p = currentProfile();
+    document.getElementById('progressBadge').textContent = `Profile ${session.currentIndex+1}/${session.order.length}`;
+    document.getElementById('brideBadge').textContent = `👑 Bride: ${session.brideCorrect}/${session.brideTotal}`;
+
+    const wrap = document.getElementById('photoImageWrap');
+    const photoUrl = photos[idx];
+    wrap.innerHTML = photoUrl ? `<img src="${photoUrl}" alt="">` : `<div class="no-photo">🕶️</div>`;
+
+    document.getElementById('fakeName').textContent = p.fakeName || '???';
+    document.getElementById('fakeAge').textContent = p.age ? (', ' + p.age) : '';
+
+    const filled = session.filled[idx] || {};
+    const pane = document.getElementById('detailsPane');
+    pane.innerHTML = CATS.map(c => {
+      const val = filled[c.key];
+      let inner;
+      if(!val){
+        inner = c.count > 1
+          ? `<div class="tag-wrap placeholder">Tap to reveal</div>`
+          : `<span class="cat-value placeholder">Tap to reveal</span>`;
+      } else if(c.count > 1){
+        inner = `<div class="tag-wrap">${val.map(v=>`<span class="tag-pill">${esc(v)}</span>`).join('')}</div>`;
+      } else {
+        inner = `<span class="cat-value">${esc(val[0])}</span>`;
+      }
+      return `
+        <div class="cat-row ${c.cls} ${val?'filled':''}" data-cat="${c.key}">
+          <span class="icon">${c.icon}</span>
+          <div class="body">
+            <span class="cat-label">${esc(c.label)}</span>
+            ${inner}
+          </div>
+        </div>`;
+    }).join('');
+
+    pane.querySelectorAll('.cat-row').forEach(row => {
+      row.addEventListener('click', () => onCategoryTap(row.dataset.cat));
+    });
+
+    const allFilled = CATS.every(c => filled[c.key]);
+    const vote = session.votes[idx];
+    const btnPass = document.getElementById('btnPass');
+    const btnSmash = document.getElementById('btnSmash');
+    const btnReveal = document.getElementById('btnReveal');
+    const voteHint = document.getElementById('voteHint');
+
+    const wasDisabled = btnPass.disabled;
+    const nowDisabled = !allFilled || !!vote;
+    btnPass.disabled = nowDisabled;
+    btnSmash.disabled = nowDisabled;
+    btnPass.classList.toggle('voted', vote === 'pass');
+    btnSmash.classList.toggle('voted', vote === 'smash');
+
+    if(vote){
+      voteHint.textContent = vote === 'pass' ? 'You passed on this one' : 'You smashed this one 💚';
+      voteHint.classList.remove('ready');
+    } else if(allFilled){
+      voteHint.textContent = 'Ready! Tap ✕ or ♥ to vote';
+      voteHint.classList.add('ready');
+    } else {
+      voteHint.textContent = 'Tap through all 5 categories first';
+      voteHint.classList.remove('ready');
+    }
+
+    if(wasDisabled && !nowDisabled){
+      [btnPass, btnSmash].forEach(b => {
+        b.classList.remove('ready-pulse');
+        void b.offsetWidth; // restart animation
+        b.classList.add('ready-pulse');
+      });
+    }
+
+    if(vote && !session.revealed[idx]){
+      btnReveal.classList.remove('hidden');
+    } else {
+      btnReveal.classList.add('hidden');
+    }
+  }
+
+  function onCategoryTap(catKey){
+    const idx = currentProfileIdx();
+    if(!session.filled[idx]) session.filled[idx] = {};
+    if(session.filled[idx][catKey]) return;
+
+    const cat = CATS.find(c=>c.key===catKey);
+    const row = document.querySelector(`.cat-row[data-cat="${catKey}"]`);
+    const pool = setup.lists[catKey] && setup.lists[catKey].length ? setup.lists[catKey] : ['???'];
+
+    let ticks = 0;
+    const maxTicks = 9;
+    const bodyEl = row.querySelector('.body');
+    const valueSlotSelector = cat.count > 1 ? '.tag-wrap' : '.cat-value';
+    const interval = setInterval(() => {
+      ticks++;
+      const sample = Array.from({length:cat.count}, () => pool[Math.floor(Math.random()*pool.length)]);
+      const slot = bodyEl.querySelector(valueSlotSelector);
+      if(cat.count>1){
+        slot.classList.remove('placeholder');
+        slot.innerHTML = sample.map(v=>`<span class="tag-pill">${esc(v)}</span>`).join('');
+      } else {
+        slot.classList.remove('placeholder');
+        slot.textContent = sample[0];
+      }
+      if(ticks >= maxTicks){
+        clearInterval(interval);
+        const finalVal = drawFromBag(catKey, cat.count, session.bags);
+        session.filled[idx][catKey] = finalVal;
+        saveSession();
+        renderPlayScreen();
+      }
+    }, 65);
+  }
+
+  function playVoteAnimation(choice){
+    const stamp = document.getElementById('voteStamp');
+    const burst = document.getElementById('heartBurst');
+    const card = document.querySelector('.photo-card');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    stamp.textContent = choice === 'pass' ? 'PASS ✕' : 'SMASH ♥';
+    stamp.className = 'vote-stamp show ' + choice;
+
+    if(!reduceMotion){
+      if(choice === 'smash'){
+        burst.innerHTML = Array.from({length:9}, () => {
+          const dx = (Math.random()*160-80).toFixed(0);
+          const left = 15 + Math.random()*65;
+          const delay = (Math.random()*0.35).toFixed(2);
+          return `<span style="left:${left}%; --dx:${dx}px; animation-delay:${delay}s;">💚</span>`;
+        }).join('');
+      } else {
+        card.classList.add('shake-hard');
+      }
+    }
+    setTimeout(() => {
+      stamp.className = 'vote-stamp';
+      burst.innerHTML = '';
+      card.classList.remove('shake-hard');
+    }, 1200);
+  }
+
+  function onVote(choice){
+    const idx = currentProfileIdx();
+    if(session.votes[idx]) return;
+    session.votes[idx] = choice;
+    saveSession();
+    playVoteAnimation(choice);
+    renderPlayScreen();
+  }
+
+  function onReveal(){
+    const idx = currentProfileIdx();
+    const p = setup.profiles[idx];
+    document.getElementById('overlayName').textContent = p.realName || '(no name entered)';
+    const photoWrap = document.getElementById('revealPhotoWrap');
+    const beforeUrl = beforePhotos[idx];
+    photoWrap.innerHTML = `<div class="reveal-photo-inner">${beforeUrl ? `<img src="${beforeUrl}" alt="">` : `<span class="no-photo-fallback">🤷</span>`}</div>`;
+    document.getElementById('brideGuessBox').classList.remove('hidden');
+    document.getElementById('rewardBox').classList.add('hidden');
+    document.getElementById('btnNextProfile').classList.add('hidden');
+    document.getElementById('revealOverlay').classList.remove('hidden');
+    startConfetti();
+  }
+
+  function onGuess(correct){
+    const idx = currentProfileIdx();
+    if(session.revealed[idx]) return;
+    session.revealed[idx] = true;
+    session.brideTotal++;
+    if(correct) session.brideCorrect++;
+    const key = correct ? 'rewards' : 'consequences';
+    const [outcomeText] = drawFromBag(key, 1, session.bags);
+    saveSession();
+    document.getElementById('brideGuessBox').classList.add('hidden');
+    const rewardBox = document.getElementById('rewardBox');
+    rewardBox.classList.remove('hidden');
+    rewardBox.classList.toggle('reward', correct);
+    rewardBox.classList.toggle('consequence', !correct);
+    document.getElementById('rewardLabel').textContent = correct ? '🎁 Reward!' : '😬 Consequence!';
+    document.getElementById('rewardText').textContent = outcomeText;
+    document.getElementById('btnNextProfile').classList.remove('hidden');
+    document.getElementById('brideBadge').textContent = `👑 Bride: ${session.brideCorrect}/${session.brideTotal}`;
+  }
+
+  function onNextProfile(){
+    stopConfetti();
+    document.getElementById('revealOverlay').classList.add('hidden');
+    document.getElementById('voteStamp').className = 'vote-stamp';
+    document.getElementById('heartBurst').innerHTML = '';
+    document.getElementById('rewardBox').classList.add('hidden');
+    if(session.currentIndex + 1 >= session.order.length){
+      showRecap();
+    } else {
+      session.currentIndex++;
+      saveSession();
+      renderPlayScreen();
+    }
+  }
+
+  // ---------- CONFETTI ----------
+  let confettiAnim = null;
+  function startConfetti(){
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    if(reduce) return;
+    const colors = ['#FF5F5F','#FD2B82','#39D9BC','#FFC94D','#FFF7EE'];
+    const pieces = Array.from({length:120}, () => ({
+      x: Math.random()*canvas.width,
+      y: -20 - Math.random()*canvas.height*0.5,
+      r: 4 + Math.random()*5,
+      c: colors[Math.floor(Math.random()*colors.length)],
+      vy: 2 + Math.random()*3,
+      vx: -1.5 + Math.random()*3,
+      rot: Math.random()*360,
+      vr: -6 + Math.random()*12,
+    }));
+    function tick(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pieces.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if(p.y > canvas.height + 20){ p.y = -20; p.x = Math.random()*canvas.width; }
+        ctx.save();
+        ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);
+        ctx.restore();
+      });
+      confettiAnim = requestAnimationFrame(tick);
+    }
+    tick();
+  }
+  function stopConfetti(){
+    if(confettiAnim) cancelAnimationFrame(confettiAnim);
+    confettiAnim = null;
+  }
+
+  // ---------- RECAP ----------
+  function showRecap(){
+    document.getElementById('finalScore').textContent = `👑 Bride's final score: ${session.brideCorrect}/${session.brideTotal}`;
+    showScreen('recap');
+  }
+
+  // ---------- SCREEN NAV ----------
+  function showScreen(name){
+    ['setup','start','play','recap'].forEach(s => {
+      document.getElementById('screen-'+s).classList.toggle('hidden', s !== name);
+    });
+  }
+
+  // ---------- WIRE UP ----------
+  document.getElementById('btnStartGame').addEventListener('click', async () => {
+    await saveSetup();
+    newSession();
+    showScreen('start');
+  });
+  document.getElementById('btnLetsPlay').addEventListener('click', () => {
+    showScreen('play');
+    renderPlayScreen();
+  });
+  document.getElementById('btnGoPlay').addEventListener('click', () => {
+    if(!session){ alert('No game in progress yet — hit "Start Game" first.'); return; }
+    showScreen('play');
+    renderPlayScreen();
+  });
+  document.getElementById('btnResetAll').addEventListener('click', async () => {
+    if(!confirm('This clears all saved profiles, photos, lists, and game progress on this device. Continue?')) return;
+    setup = defaultSetup();
+    photos = {};
+    beforePhotos = {};
+    session = null;
+    try{
+      await storage.delete('smashorpass-setup');
+      await storage.delete('smashorpass-photos');
+      await storage.delete('smashorpass-before-photos');
+      await storage.delete('smashorpass-session');
+    }catch(e){ /* ignore if already empty */ }
+    renderSetupScreen();
+  });
+  document.getElementById('btnBackSetup').addEventListener('click', () => {
+    showScreen('setup');
+    renderSetupScreen();
+  });
+  document.getElementById('btnPass').addEventListener('click', () => onVote('pass'));
+  document.getElementById('btnSmash').addEventListener('click', () => onVote('smash'));
+  document.getElementById('btnReveal').addEventListener('click', onReveal);
+  document.getElementById('btnGuessRight').addEventListener('click', () => onGuess(true));
+  document.getElementById('btnGuessWrong').addEventListener('click', () => onGuess(false));
+  document.getElementById('btnNextProfile').addEventListener('click', onNextProfile);
+  document.getElementById('btnPlayAgain').addEventListener('click', () => {
+    newSession();
+    showScreen('start');
+  });
+  document.getElementById('btnEditSetup2').addEventListener('click', () => {
+    showScreen('setup');
+    renderSetupScreen();
+  });
+  window.addEventListener('resize', () => {
+    const canvas = document.getElementById('confettiCanvas');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  });
+
+  // ---------- INIT ----------
+  (async function init(){
+    await loadSetup();
+    await loadPhotos();
+    await loadBeforePhotos();
+    await loadSession();
+    while(setup.profiles.length < NUM_PROFILES) setup.profiles.push(blankProfile());
+    setup.profiles = setup.profiles.slice(0, NUM_PROFILES);
+    if(setup.lists.lifestyle){
+      const merged = new Set([...(setup.lists.interests||[]), ...setup.lists.lifestyle]);
+      setup.lists.interests = Array.from(merged);
+      delete setup.lists.lifestyle;
+    }
+    CATS.forEach(c => { if(!setup.lists[c.key]) setup.lists[c.key] = []; });
+    if(!setup.lists.rewards) setup.lists.rewards = [];
+    if(!setup.lists.consequences) setup.lists.consequences = [];
+    renderSetupScreen();
+    showScreen('setup');
+  })();
+
+})();
+</script>
+</body>
+</html>
